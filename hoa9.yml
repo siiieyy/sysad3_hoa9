@@ -1,0 +1,41 @@
+---
+- hosts: control
+  become: yes
+  tasks:
+
+    - name: Install Updates
+      tags: always
+      apt:
+        upgrade: dist
+        update_cache: yes
+
+    - name: Install OpenSSL
+      apt:
+        name: openssl
+
+    - name: Generate CA key
+      openssl_privatekey:
+        path: /etc/ssl/private/ca.key
+        size: 4096
+      register: ca_ssl_key
+
+    - name: Generate CA certificate
+      openssl_csr:
+        path: /etc/ssl/certs/ca.csr
+        privatekey_path: /etc/ssl/private/ca.key
+        common_name: "CA WITH SSL"
+        country_name: "PH"
+        state_or_province_name: "Quezon City"
+        locality_name: "POTSDAM"
+        organization_name: "MSC"
+        email_address: "example@123.com"
+      register: ca_csr
+
+    - name: Self-Signed CA certificate
+      openssl_certificate:
+        path: /etc/ssl/certs/ca.crt
+        privatekey_path: /etc/ssl/private/ca.key
+        csr_path: /etc/ssl/certs/ca.csr
+        provider: selfsigned
+        force: true
+
